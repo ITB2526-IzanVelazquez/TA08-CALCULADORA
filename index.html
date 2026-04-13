@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sustainability Forecast Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Phase 3 · Sustainability Web</p>
+      <h1>Sustainability Forecast Dashboard</h1>
+      <p class="subtitle">
+        Forecast and reduce the impact of electricity, water, office supplies, and cleaning products using local JSON data.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button class="ghost-btn" id="resetBtn" type="button">Reset</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- CALCULATOR SETTINGS -->
+    <section class="panel calculator-panel">
+      <div class="panel-head">
+        <h2>Calculator Settings</h2>
+        <span class="badge">JSON-based</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="trend">Trend adjustment (%)</label>
+          <input id="trend" type="number" step="0.1" value="5" />
+          <small>Expected increase or decrease over time.</small>
+        </div>
+
+        <div class="field">
+          <label for="winterBoost">Winter factor (%)</label>
+          <input id="winterBoost" type="number" step="0.1" value="12" />
+        </div>
+
+        <div class="field">
+          <label for="summerBoost">Summer factor (%)</label>
+          <input id="summerBoost" type="number" step="0.1" value="8" />
+        </div>
+
+        <div class="field">
+          <label for="schoolBoost">School activity factor (%)</label>
+          <input id="schoolBoost" type="number" step="0.1" value="10" />
+        </div>
+      </div>
+
+      <div class="switch-row">
+        <label class="switch-card">
+          <input type="checkbox" id="seasonality" checked />
+          <span>Enable seasonality</span>
+        </label>
+
+        <label class="switch-card">
+          <input type="checkbox" id="variability" checked />
+          <span>Enable monthly variability</span>
+        </label>
+      </div>
+
+      <div class="action-row">
+        <button class="primary-btn big-btn" id="calculateBtn" type="button">Calculate forecast</button>
+      </div>
+
+      <div class="mini-stats">
+        <article class="stat-card">
+          <p class="stat-label">Indicators used</p>
+          <h3>4</h3>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Required calculations</p>
+          <h3>8</h3>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Data source</p>
+          <h3>JSON</h3>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Forecast status</p>
+          <h3 id="forecastStatus">Ready</h3>
+        </article>
+      </div>
+    </section>
+
+    <!-- IMPROVEMENT STRATEGY -->
+    <section class="panel reduction-panel">
+      <div class="panel-head">
+        <h2>Improvement Strategy</h2>
+        <span class="badge purple">-30% target</span>
+      </div>
+
+      <button class="secondary-btn" id="toggleImprovementBtn" type="button">
+        Show / Hide improvement options
+      </button>
+
+      <div id="improvementContent" class="collapsible-content hidden">
+        <p class="muted">
+          Select one improvement level for each area and recalculate the result.
+        </p>
+
+        <div class="field">
+          <label for="efficiencySelect">Equipment efficiency improvement</label>
+          <select id="efficiencySelect">
+            <option value="0">0%</option>
+            <option value="15">15%</option>
+            <option value="30">30%</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="behaviourSelect">User behaviour improvement</label>
+          <select id="behaviourSelect">
+            <option value="0">0%</option>
+            <option value="15">15%</option>
+            <option value="30">30%</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="circularSelect">Circular economy actions</label>
+          <select id="circularSelect">
+            <option value="0">0%</option>
+            <option value="15">15%</option>
+            <option value="30">30%</option>
+          </select>
+        </div>
+
+        <div class="improvement-actions">
+          <button class="secondary-btn" id="applyReductionBtn" type="button">Apply reduction scenario</button>
+        </div>
+
+        <div class="recommendations">
+          <h3>Recommended actions</h3>
+          <ul id="recommendationList">
+            <li>Reduce printing and prioritize digital documents.</li>
+            <li>Improve equipment efficiency and switch off unused devices.</li>
+            <li>Promote responsible water use and leak detection.</li>
+            <li>Apply circular economy principles before replacing equipment.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- GLOBAL SUMMARY -->
+    <section class="panel results-panel full-span">
+      <div class="panel-head">
+        <h2>Global Summary</h2>
+        <span class="badge teal">Live output</span>
+      </div>
+
+      <div class="summary-grid">
+        <article class="summary-card">
+          <p>Total forecast</p>
+          <h3 id="summaryForecast">0</h3>
+        </article>
+        <article class="summary-card">
+          <p>Total after improvements</p>
+          <h3 id="summaryReduced">0</h3>
+        </article>
+        <article class="summary-card">
+          <p>Total reduction</p>
+          <h3 id="summaryReduction">0%</h3>
+        </article>
+        <article class="summary-card">
+          <p>Estimated savings</p>
+          <h3 id="summarySavings">0</h3>
+        </article>
+      </div>
+
+      <div class="insight-box" id="insightBox">
+        Loading JSON data...
+      </div>
+    </section>
+
+    <!-- REQUIRED 8 CHARTS -->
+    <section class="panel full-span">
+      <div class="panel-head">
+        <h2>Required Analysis Charts</h2>
+        <span class="badge">8 calculations</span>
+      </div>
+
+      <div class="required-grid">
+        <div class="chart-card">
+          <h3>1. Electricity consumption for next year</h3>
+          <p class="chart-note" id="note-energy-year">Waiting for calculation...</p>
+          <canvas id="chartEnergyYear"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>2. Electricity consumption for the school period (Sep–Jun)</h3>
+          <p class="chart-note" id="note-energy-school">Waiting for calculation...</p>
+          <canvas id="chartEnergySchool"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>3. Water consumption for next year</h3>
+          <p class="chart-note" id="note-water-year">Waiting for calculation...</p>
+          <canvas id="chartWaterYear"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>4. Water consumption for the school period (Sep–Jun)</h3>
+          <p class="chart-note" id="note-water-school">Waiting for calculation...</p>
+          <canvas id="chartWaterSchool"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>5. Office supplies consumption for next year</h3>
+          <p class="chart-note" id="note-office-year">Waiting for calculation...</p>
+          <canvas id="chartOfficeYear"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>6. Office supplies consumption for the school period (Sep–Jun)</h3>
+          <p class="chart-note" id="note-office-school">Waiting for calculation...</p>
+          <canvas id="chartOfficeSchool"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>7. Cleaning products consumption for next year</h3>
+          <p class="chart-note" id="note-cleaning-year">Waiting for calculation...</p>
+          <canvas id="chartCleaningYear"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <h3>8. Cleaning products consumption for the school period (Sep–Jun)</h3>
+          <p class="chart-note" id="note-cleaning-school">Waiting for calculation...</p>
+          <canvas id="chartCleaningSchool"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3-YEAR ROADMAP -->
+    <section class="panel full-span">
+      <div class="panel-head">
+        <h2>3-Year Action Plan</h2>
+        <span class="badge purple">Roadmap</span>
+      </div>
+
+      <div class="roadmap-grid">
+        <article class="roadmap-card">
+          <h3>Year 1</h3>
+          <p class="roadmap-title">Measurement and quick wins</p>
+          <ul>
+            <li>Audit electricity and water consumption</li>
+            <li>Reduce unnecessary printing</li>
+            <li>Improve waste separation</li>
+            <li>Detect abnormal peaks in monthly use</li>
+          </ul>
+        </article>
+
+        <article class="roadmap-card">
+          <h3>Year 2</h3>
+          <p class="roadmap-title">Optimization and efficiency</p>
+          <ul>
+            <li>Upgrade inefficient devices</li>
+            <li>Improve cleaning and purchasing routines</li>
+            <li>Optimize office supply usage</li>
+            <li>Apply better control of recurring expenses</li>
+          </ul>
+        </article>
+
+        <article class="roadmap-card">
+          <h3>Year 3</h3>
+          <p class="roadmap-title">Circular economy consolidation</p>
+          <ul>
+            <li>Repair before replacing equipment</li>
+            <li>Reuse valid components</li>
+            <li>Improve WEEE and waste management</li>
+            <li>Consolidate the -30% target</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Public web dashboard for sustainability analysis · Ready for GitHub Pages</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
