@@ -1,14 +1,5 @@
-const MONTHS = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December"
-];
-
-const MONTH_SHORT = [
-  "Jan","Feb","Mar","Apr","May","Jun",
-  "Jul","Aug","Sep","Oct","Nov","Dec"
-];
-
-const SCHOOL_MONTHS = [8, 9, 10, 11, 0, 1, 2, 3, 4, 5]; // Sep-Jun
+const SCHOOL_MONTHS = [8, 9, 10, 11, 0, 1, 2, 3, 4, 5];
+const MONTH_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 const INDICATORS = {
   energy: { label: "Electricity", unit: "kWh", color: "#5aa7ff" },
@@ -18,62 +9,14 @@ const INDICATORS = {
 };
 
 const CHART_DEFS = [
-  {
-    key: "energy-year",
-    indicator: "energy",
-    months: [...Array(12).keys()],
-    canvasId: "chartEnergyYear",
-    noteId: "note-energy-year"
-  },
-  {
-    key: "energy-school",
-    indicator: "energy",
-    months: SCHOOL_MONTHS,
-    canvasId: "chartEnergySchool",
-    noteId: "note-energy-school"
-  },
-  {
-    key: "water-year",
-    indicator: "water",
-    months: [...Array(12).keys()],
-    canvasId: "chartWaterYear",
-    noteId: "note-water-year"
-  },
-  {
-    key: "water-school",
-    indicator: "water",
-    months: SCHOOL_MONTHS,
-    canvasId: "chartWaterSchool",
-    noteId: "note-water-school"
-  },
-  {
-    key: "office-year",
-    indicator: "office",
-    months: [...Array(12).keys()],
-    canvasId: "chartOfficeYear",
-    noteId: "note-office-year"
-  },
-  {
-    key: "office-school",
-    indicator: "office",
-    months: SCHOOL_MONTHS,
-    canvasId: "chartOfficeSchool",
-    noteId: "note-office-school"
-  },
-  {
-    key: "cleaning-year",
-    indicator: "cleaning",
-    months: [...Array(12).keys()],
-    canvasId: "chartCleaningYear",
-    noteId: "note-cleaning-year"
-  },
-  {
-    key: "cleaning-school",
-    indicator: "cleaning",
-    months: SCHOOL_MONTHS,
-    canvasId: "chartCleaningSchool",
-    noteId: "note-cleaning-school"
-  }
+  { key: "energy-year", indicator: "energy", months: [...Array(12).keys()], canvasId: "chartEnergyYear", noteId: "note-energy-year" },
+  { key: "energy-school", indicator: "energy", months: SCHOOL_MONTHS, canvasId: "chartEnergySchool", noteId: "note-energy-school" },
+  { key: "water-year", indicator: "water", months: [...Array(12).keys()], canvasId: "chartWaterYear", noteId: "note-water-year" },
+  { key: "water-school", indicator: "water", months: SCHOOL_MONTHS, canvasId: "chartWaterSchool", noteId: "note-water-school" },
+  { key: "office-year", indicator: "office", months: [...Array(12).keys()], canvasId: "chartOfficeYear", noteId: "note-office-year" },
+  { key: "office-school", indicator: "office", months: SCHOOL_MONTHS, canvasId: "chartOfficeSchool", noteId: "note-office-school" },
+  { key: "cleaning-year", indicator: "cleaning", months: [...Array(12).keys()], canvasId: "chartCleaningYear", noteId: "note-cleaning-year" },
+  { key: "cleaning-school", indicator: "cleaning", months: SCHOOL_MONTHS, canvasId: "chartCleaningSchool", noteId: "note-cleaning-school" }
 ];
 
 let rawData = null;
@@ -88,46 +31,73 @@ const schoolBoostEl = document.getElementById("schoolBoost");
 const seasonalityEl = document.getElementById("seasonality");
 const variabilityEl = document.getElementById("variability");
 
-const efficiencySelect = document.getElementById("efficiencySelect");
-const behaviourSelect = document.getElementById("behaviourSelect");
-const circularSelect = document.getElementById("circularSelect");
-
 const forecastStatus = document.getElementById("forecastStatus");
 const summaryForecast = document.getElementById("summaryForecast");
 const summaryReduced = document.getElementById("summaryReduced");
 const summaryReduction = document.getElementById("summaryReduction");
 const summarySavings = document.getElementById("summarySavings");
 const insightBox = document.getElementById("insightBox");
+const selectedReductionEl = document.getElementById("selectedReduction");
 
-const toggleImprovementBtn = document.getElementById("toggleImprovementBtn");
-const improvementContent = document.getElementById("improvementContent");
+const actionCheckboxes = Array.from(document.querySelectorAll(".action-checkbox"));
 
-document.getElementById("calculateBtn").addEventListener("click", calculateAllCharts);
-document.getElementById("applyReductionBtn").addEventListener("click", applyReductionScenario);
 document.getElementById("resetBtn").addEventListener("click", resetDashboard);
 
-toggleImprovementBtn.addEventListener("click", () => {
-  improvementContent.classList.toggle("hidden");
+[
+  trendEl,
+  winterBoostEl,
+  summerBoostEl,
+  schoolBoostEl,
+  seasonalityEl,
+  variabilityEl
+].forEach(el => {
+  el.addEventListener("input", handleSettingsChange);
+  el.addEventListener("change", handleSettingsChange);
 });
 
-document.addEventListener("DOMContentLoaded", async () => {
+actionCheckboxes.forEach(cb => cb.addEventListener("change", recalculateAll));
+
+window.addEventListener("load", async () => {
   initCharts();
   await loadJsonData();
-  calculateAllCharts();
+  recalculateAll();
 });
+
+function handleSettingsChange(event) {
+  clampInput(event.target);
+  recalculateAll();
+}
+
+function clampInput(el) {
+  if (!el || el.type !== "number") return;
+  let value = parseInt(el.value || "0", 10);
+  if (Number.isNaN(value)) value = 0;
+  if (value > 100) value = 100;
+  if (value < -100) value = -100;
+  el.value = value;
+}
 
 async function loadJsonData() {
   try {
-    const response = await fetch("dataclean_final_TA08.json");
-    if (!response.ok) throw new Error("Could not load dataclean_final_TA08.json");
+    const response = await fetch("./dataclean_final_TA08.json?ts=" + Date.now(), {
+      method: "GET",
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
     rawData = await response.json();
     monthlyData = buildMonthlyData(rawData);
-    insightBox.textContent = "JSON data loaded successfully. Click calculate to generate the 8 required analysis charts.";
-    forecastStatus.textContent = "Loaded";
+
+    forecastStatus.textContent = "Calculated";
+    insightBox.textContent = "JSON data loaded successfully. Forecasts update automatically when you change the calculator or the selected actions.";
+    console.log("JSON loaded correctly", monthlyData);
   } catch (error) {
-    console.error(error);
-    insightBox.textContent = "Error loading JSON. Make sure dataclean_final_TA08.json is in the same folder and open the page with Live Server.";
+    console.error("JSON load error:", error);
     forecastStatus.textContent = "Error";
+    insightBox.textContent = "Error loading JSON. Open the page with Live Server and check that dataclean_final_TA08.json is in the same folder.";
   }
 }
 
@@ -139,31 +109,47 @@ function buildMonthlyData(data) {
     cleaning: { monthly: new Array(12).fill(0), unit: "€" }
   };
 
-  if (data.aigua) {
+  if (Array.isArray(data?.aigua)) {
     data.aigua.forEach(day => {
-      const month = new Date(day.data).getMonth();
-      const totalDay = (day.hores || []).reduce((acc, h) => acc + (Number(h.consum_l) || 0), 0);
+      if (!day || !day.data) return;
+      const date = new Date(day.data);
+      if (Number.isNaN(date.getTime())) return;
+      const month = date.getMonth();
+
+      const totalDay = Array.isArray(day.hores)
+        ? day.hores.reduce((acc, h) => acc + (Number(h?.consum_l) || 0), 0)
+        : 0;
+
       result.water.monthly[month] += totalDay;
     });
   }
 
-  if (data.consumibles_oficina) {
+  if (Array.isArray(data?.consumibles_oficina)) {
     data.consumibles_oficina.forEach(item => {
-      const month = new Date(item.data).getMonth();
+      if (!item || !item.data) return;
+      const date = new Date(item.data);
+      if (Number.isNaN(date.getTime())) return;
+      const month = date.getMonth();
       result.office.monthly[month] += Number(item.cost_eur) || 0;
     });
   }
 
-  if (data.neteja_higiene) {
+  if (Array.isArray(data?.neteja_higiene)) {
     data.neteja_higiene.forEach(item => {
-      const month = new Date(item.data).getMonth();
+      if (!item || !item.data) return;
+      const date = new Date(item.data);
+      if (Number.isNaN(date.getTime())) return;
+      const month = date.getMonth();
       result.cleaning.monthly[month] += Number(item.cost_eur) || 0;
     });
   }
 
-  if (data.planta_solar) {
+  if (Array.isArray(data?.planta_solar)) {
     data.planta_solar.forEach(item => {
-      const month = new Date(item.data).getMonth();
+      if (!item || !item.data) return;
+      const date = new Date(item.data);
+      if (Number.isNaN(date.getTime())) return;
+      const month = date.getMonth();
       result.energy.monthly[month] += Number(item.consumption_kwh) || 0;
     });
   }
@@ -174,7 +160,9 @@ function buildMonthlyData(data) {
 function initCharts() {
   CHART_DEFS.forEach(def => {
     const cfg = INDICATORS[def.indicator];
-    charts[def.key] = new Chart(document.getElementById(def.canvasId), {
+    const canvas = document.getElementById(def.canvasId);
+
+    charts[def.key] = new Chart(canvas, {
       type: "bar",
       data: {
         labels: def.months.map(m => MONTH_SHORT[m]),
@@ -182,21 +170,24 @@ function initCharts() {
           {
             label: "Forecast",
             data: new Array(def.months.length).fill(0),
-            backgroundColor: cfg.color
+            backgroundColor: cfg.color,
+            borderRadius: 8
           },
           {
-            label: "Reduced",
+            label: "After selected actions",
             data: new Array(def.months.length).fill(0),
-            backgroundColor: "rgba(255,255,255,0.35)"
+            backgroundColor: "rgba(255,255,255,0.30)",
+            borderRadius: 8
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        animation: false,
         scales: {
           x: {
-            ticks: { color: "#dbe4ff" },
+            ticks: { color: "#dbe4ff", maxRotation: 0, minRotation: 0 },
             grid: { color: "rgba(255,255,255,.06)" }
           },
           y: {
@@ -206,7 +197,7 @@ function initCharts() {
         },
         plugins: {
           legend: {
-            labels: { color: "#dbe4ff" }
+            labels: { color: "#dbe4ff", boxWidth: 10 }
           },
           tooltip: {
             backgroundColor: "#0d1327",
@@ -219,47 +210,60 @@ function initCharts() {
   });
 }
 
-function calculateAllCharts() {
+function recalculateAll() {
   if (!monthlyData) return;
 
   computedResults = {};
   let globalForecast = 0;
+  let globalReduced = 0;
+  const selectedReduction = getSelectedReductionFactor();
+
+  selectedReductionEl.textContent = `${selectedReduction.percentage}%`;
 
   CHART_DEFS.forEach(def => {
     const result = calculateSeries(def.indicator, def.months);
+    const reducedSeries = result.series.map(v => round2(v * selectedReduction.factor));
+    const reducedTotal = round2(reducedSeries.reduce((a, b) => a + b, 0));
+
     computedResults[def.key] = {
       ...result,
-      reducedSeries: new Array(result.series.length).fill(0),
-      reducedTotal: 0
+      reducedSeries,
+      reducedTotal
     };
 
     charts[def.key].data.labels = def.months.map(m => MONTH_SHORT[m]);
     charts[def.key].data.datasets[0].data = result.series;
-    charts[def.key].data.datasets[1].data = new Array(result.series.length).fill(0);
+    charts[def.key].data.datasets[1].data = reducedSeries;
     charts[def.key].update();
 
-    document.getElementById(def.noteId).textContent =
-      `Forecast total: ${formatNumber(result.total)} ${result.unit}`;
+    const note = document.getElementById(def.noteId);
+    note.textContent =
+      `Forecast: ${formatNumber(result.total)} ${result.unit} · Reduced: ${formatNumber(reducedTotal)} ${result.unit}`;
 
     globalForecast += result.total;
+    globalReduced += reducedTotal;
   });
 
+  const savings = round2(globalForecast - globalReduced);
+  const pct = globalForecast > 0 ? round2(((globalForecast - globalReduced) / globalForecast) * 100) : 0;
+
   summaryForecast.textContent = formatNumber(globalForecast);
-  summaryReduced.textContent = "0";
-  summaryReduction.textContent = "0%";
-  summarySavings.textContent = "0";
+  summaryReduced.textContent = formatNumber(globalReduced);
+  summaryReduction.textContent = `${pct}%`;
+  summarySavings.textContent = formatNumber(savings);
+
   forecastStatus.textContent = "Calculated";
-  insightBox.textContent = "The 8 required calculations have been generated successfully from the JSON data.";
+  insightBox.textContent = `The page recalculates automatically. Selected actions currently apply an estimated reduction of ${selectedReduction.percentage}% (maximum 30%).`;
 }
 
 function calculateSeries(indicatorKey, activeMonths) {
   const baseSeries = monthlyData[indicatorKey].monthly;
   const unit = monthlyData[indicatorKey].unit;
 
-  const trendPct = parseFloat(trendEl.value) / 100;
-  const winterPct = parseFloat(winterBoostEl.value) / 100;
-  const summerPct = parseFloat(summerBoostEl.value) / 100;
-  const schoolPct = parseFloat(schoolBoostEl.value) / 100;
+  const trendPct = safePercent(trendEl.value);
+  const winterPct = safePercent(winterBoostEl.value);
+  const summerPct = safePercent(summerBoostEl.value);
+  const schoolPct = safePercent(schoolBoostEl.value);
 
   const seed = indicatorKey.charCodeAt(0);
   const series = [];
@@ -290,51 +294,24 @@ function calculateSeries(indicatorKey, activeMonths) {
   };
 }
 
-function applyReductionScenario() {
-  if (!Object.keys(computedResults).length) {
-    alert("Please calculate the forecast first.");
-    return;
-  }
+function getSelectedReductionFactor() {
+  const total = actionCheckboxes
+    .filter(cb => cb.checked)
+    .reduce((sum, cb) => sum + Number(cb.dataset.impact || 0), 0);
 
-  const efficiency = parseFloat(efficiencySelect.value);
-  const behaviour = parseFloat(behaviourSelect.value);
-  const circular = parseFloat(circularSelect.value);
+  const capped = Math.min(total, 30);
+  return {
+    percentage: capped,
+    factor: 1 - capped / 100
+  };
+}
 
-  let totalReductionPct = efficiency + behaviour + circular;
-  if (totalReductionPct > 30) totalReductionPct = 30;
-
-  const factor = 1 - totalReductionPct / 100;
-
-  let globalForecast = 0;
-  let globalReduced = 0;
-
-  CHART_DEFS.forEach(def => {
-    const current = computedResults[def.key];
-    const reducedSeries = current.series.map(v => round2(v * factor));
-    const reducedTotal = round2(reducedSeries.reduce((a, b) => a + b, 0));
-
-    current.reducedSeries = reducedSeries;
-    current.reducedTotal = reducedTotal;
-
-    charts[def.key].data.datasets[1].data = reducedSeries;
-    charts[def.key].update();
-
-    document.getElementById(def.noteId).textContent =
-      `Forecast total: ${formatNumber(current.total)} ${current.unit} · Reduced total: ${formatNumber(reducedTotal)} ${current.unit}`;
-
-    globalForecast += current.total;
-    globalReduced += reducedTotal;
-  });
-
-  const savings = round2(globalForecast - globalReduced);
-  const pct = globalForecast > 0 ? round2(((globalForecast - globalReduced) / globalForecast) * 100) : 0;
-
-  summaryForecast.textContent = formatNumber(globalForecast);
-  summaryReduced.textContent = formatNumber(globalReduced);
-  summaryReduction.textContent = `${pct}%`;
-  summarySavings.textContent = formatNumber(savings);
-
-  insightBox.textContent = `The reduction scenario has been applied. Combined reduction across the 8 calculations: ${pct}%.`;
+function safePercent(value) {
+  let n = parseInt(value || "0", 10);
+  if (Number.isNaN(n)) n = 0;
+  if (n > 100) n = 100;
+  if (n < -100) n = -100;
+  return n / 100;
 }
 
 function pseudoRandomVariation(index, seed) {
@@ -350,10 +327,8 @@ function resetDashboard() {
   schoolBoostEl.value = 10;
   seasonalityEl.checked = true;
   variabilityEl.checked = true;
-  efficiencySelect.value = "0";
-  behaviourSelect.value = "0";
-  circularSelect.value = "0";
-  calculateAllCharts();
+  actionCheckboxes.forEach(cb => cb.checked = false);
+  recalculateAll();
 }
 
 function round2(n) {
