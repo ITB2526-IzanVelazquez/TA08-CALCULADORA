@@ -22,7 +22,6 @@ const CHART_DEFS = [
 let rawData = null;
 let monthlyData = null;
 let charts = {};
-let computedResults = {};
 
 const trendEl = document.getElementById("trend");
 const winterBoostEl = document.getElementById("winterBoost");
@@ -41,7 +40,7 @@ const selectedReductionEl = document.getElementById("selectedReduction");
 
 const actionCheckboxes = Array.from(document.querySelectorAll(".action-checkbox"));
 
-document.getElementById("resetBtn").addEventListener("click", resetDashboard);
+document.getElementById("resetBtn")?.addEventListener("click", resetDashboard);
 
 [
   trendEl,
@@ -51,13 +50,14 @@ document.getElementById("resetBtn").addEventListener("click", resetDashboard);
   seasonalityEl,
   variabilityEl
 ].forEach(el => {
-  el.addEventListener("input", handleSettingsChange);
-  el.addEventListener("change", handleSettingsChange);
+  el?.addEventListener("input", handleSettingsChange);
+  el?.addEventListener("change", handleSettingsChange);
 });
 
 actionCheckboxes.forEach(cb => cb.addEventListener("change", recalculateAll));
 
 window.addEventListener("load", async () => {
+  if (!document.getElementById("chartEnergyYear")) return;
   initCharts();
   await loadJsonData();
   recalculateAll();
@@ -80,7 +80,6 @@ function clampInput(el) {
 async function loadJsonData() {
   try {
     const response = await fetch("./dataclean_final_TA08.json?ts=" + Date.now(), {
-      method: "GET",
       cache: "no-store"
     });
 
@@ -93,7 +92,7 @@ async function loadJsonData() {
 
     forecastStatus.textContent = "Calculated";
     insightBox.textContent = "JSON data loaded successfully. Forecasts update automatically when you change the calculator or the selected actions.";
-    console.log("JSON loaded correctly", monthlyData);
+    saveDashboardState();
   } catch (error) {
     console.error("JSON load error:", error);
     forecastStatus.textContent = "Error";
@@ -111,46 +110,44 @@ function buildMonthlyData(data) {
 
   if (Array.isArray(data?.aigua)) {
     data.aigua.forEach(day => {
-      if (!day || !day.data) return;
+      if (!day?.data) return;
       const date = new Date(day.data);
       if (Number.isNaN(date.getTime())) return;
       const month = date.getMonth();
-
       const totalDay = Array.isArray(day.hores)
         ? day.hores.reduce((acc, h) => acc + (Number(h?.consum_l) || 0), 0)
         : 0;
-
       result.water.monthly[month] += totalDay;
     });
   }
 
   if (Array.isArray(data?.consumibles_oficina)) {
     data.consumibles_oficina.forEach(item => {
-      if (!item || !item.data) return;
+      if (!item?.data) return;
       const date = new Date(item.data);
       if (Number.isNaN(date.getTime())) return;
       const month = date.getMonth();
-      result.office.monthly[month] += Number(item.cost_eur) || 0;
+      result.office.monthly[month] += Number(item?.cost_eur) || 0;
     });
   }
 
   if (Array.isArray(data?.neteja_higiene)) {
     data.neteja_higiene.forEach(item => {
-      if (!item || !item.data) return;
+      if (!item?.data) return;
       const date = new Date(item.data);
       if (Number.isNaN(date.getTime())) return;
       const month = date.getMonth();
-      result.cleaning.monthly[month] += Number(item.cost_eur) || 0;
+      result.cleaning.monthly[month] += Number(item?.cost_eur) || 0;
     });
   }
 
   if (Array.isArray(data?.planta_solar)) {
     data.planta_solar.forEach(item => {
-      if (!item || !item.data) return;
+      if (!item?.data) return;
       const date = new Date(item.data);
       if (Number.isNaN(date.getTime())) return;
       const month = date.getMonth();
-      result.energy.monthly[month] += Number(item.consumption_kwh) || 0;
+      result.energy.monthly[month] += Number(item?.consumption_kwh) || 0;
     });
   }
 
@@ -174,7 +171,7 @@ function initCharts() {
             borderRadius: 8
           },
           {
-            label: "After selected actions",
+            label: "After actions",
             data: new Array(def.months.length).fill(0),
             backgroundColor: "rgba(255,255,255,0.30)",
             borderRadius: 8
@@ -185,24 +182,52 @@ function initCharts() {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
-        scales: {
-          x: {
-            ticks: { color: "#dbe4ff", maxRotation: 0, minRotation: 0 },
-            grid: { color: "rgba(255,255,255,.06)" }
-          },
-          y: {
-            ticks: { color: "#dbe4ff" },
-            grid: { color: "rgba(255,255,255,.06)" }
+        layout: {
+          padding: {
+            top: 4,
+            right: 8,
+            bottom: 0,
+            left: 4
           }
         },
         plugins: {
           legend: {
-            labels: { color: "#dbe4ff", boxWidth: 10 }
+            position: "top",
+            labels: {
+              color: "#dbe4ff",
+              boxWidth: 12,
+              boxHeight: 8,
+              padding: 8,
+              font: { size: 11 }
+            }
           },
           tooltip: {
             backgroundColor: "#0d1327",
             titleColor: "#fff",
             bodyColor: "#dce4ff"
+          }
+        },
+        scales: {
+          x: {
+            offset: true,
+            ticks: {
+              color: "#dbe4ff",
+              maxRotation: 0,
+              minRotation: 0,
+              autoSkip: true,
+              font: { size: 10 }
+            },
+            grid: { color: "rgba(255,255,255,.05)" }
+          },
+          y: {
+            beginAtZero: true,
+            grace: "10%",
+            ticks: {
+              color: "#dbe4ff",
+              font: { size: 10 },
+              callback: (value) => formatAxisValue(value)
+            },
+            grid: { color: "rgba(255,255,255,.05)" }
           }
         }
       }
@@ -213,32 +238,28 @@ function initCharts() {
 function recalculateAll() {
   if (!monthlyData) return;
 
-  computedResults = {};
   let globalForecast = 0;
   let globalReduced = 0;
   const selectedReduction = getSelectedReductionFactor();
 
-  selectedReductionEl.textContent = `${selectedReduction.percentage}%`;
+  if (selectedReductionEl) {
+    selectedReductionEl.textContent = `${selectedReduction.percentage}%`;
+  }
 
   CHART_DEFS.forEach(def => {
     const result = calculateSeries(def.indicator, def.months);
     const reducedSeries = result.series.map(v => round2(v * selectedReduction.factor));
     const reducedTotal = round2(reducedSeries.reduce((a, b) => a + b, 0));
 
-    computedResults[def.key] = {
-      ...result,
-      reducedSeries,
-      reducedTotal
-    };
-
-    charts[def.key].data.labels = def.months.map(m => MONTH_SHORT[m]);
     charts[def.key].data.datasets[0].data = result.series;
     charts[def.key].data.datasets[1].data = reducedSeries;
     charts[def.key].update();
 
     const note = document.getElementById(def.noteId);
-    note.textContent =
-      `Forecast: ${formatNumber(result.total)} ${result.unit} · Reduced: ${formatNumber(reducedTotal)} ${result.unit}`;
+    if (note) {
+      note.textContent =
+        `Forecast: ${formatNumber(result.total)} ${result.unit} · Reduced: ${formatNumber(reducedTotal)} ${result.unit}`;
+    }
 
     globalForecast += result.total;
     globalReduced += reducedTotal;
@@ -247,23 +268,27 @@ function recalculateAll() {
   const savings = round2(globalForecast - globalReduced);
   const pct = globalForecast > 0 ? round2(((globalForecast - globalReduced) / globalForecast) * 100) : 0;
 
-  summaryForecast.textContent = formatNumber(globalForecast);
-  summaryReduced.textContent = formatNumber(globalReduced);
-  summaryReduction.textContent = `${pct}%`;
-  summarySavings.textContent = formatNumber(savings);
+  if (summaryForecast) summaryForecast.textContent = formatNumber(globalForecast);
+  if (summaryReduced) summaryReduced.textContent = formatNumber(globalReduced);
+  if (summaryReduction) summaryReduction.textContent = `${pct}%`;
+  if (summarySavings) summarySavings.textContent = formatNumber(savings);
 
-  forecastStatus.textContent = "Calculated";
-  insightBox.textContent = `The page recalculates automatically. Selected actions currently apply an estimated reduction of ${selectedReduction.percentage}% (maximum 30%).`;
+  if (forecastStatus) forecastStatus.textContent = "Calculated";
+  if (insightBox) {
+    insightBox.textContent = `The page recalculates automatically. Selected actions currently apply an estimated reduction of ${selectedReduction.percentage}% (maximum 30%).`;
+  }
+
+  saveDashboardState();
 }
 
 function calculateSeries(indicatorKey, activeMonths) {
   const baseSeries = monthlyData[indicatorKey].monthly;
   const unit = monthlyData[indicatorKey].unit;
 
-  const trendPct = safePercent(trendEl.value);
-  const winterPct = safePercent(winterBoostEl.value);
-  const summerPct = safePercent(summerBoostEl.value);
-  const schoolPct = safePercent(schoolBoostEl.value);
+  const trendPct = safePercent(trendEl?.value);
+  const winterPct = safePercent(winterBoostEl?.value);
+  const summerPct = safePercent(summerBoostEl?.value);
+  const schoolPct = safePercent(schoolBoostEl?.value);
 
   const seed = indicatorKey.charCodeAt(0);
   const series = [];
@@ -273,13 +298,13 @@ function calculateSeries(indicatorKey, activeMonths) {
 
     value *= (1 + trendPct * (position / Math.max(1, activeMonths.length - 1)));
 
-    if (seasonalityEl.checked) {
+    if (seasonalityEl?.checked) {
       if ([11, 0, 1].includes(monthIndex)) value *= (1 + winterPct);
       if ([5, 6, 7].includes(monthIndex)) value *= (1 + summerPct);
       if (SCHOOL_MONTHS.includes(monthIndex)) value *= (1 + schoolPct);
     }
 
-    if (variabilityEl.checked) {
+    if (variabilityEl?.checked) {
       const v = pseudoRandomVariation(monthIndex, seed);
       value *= (1 + v);
     }
@@ -320,15 +345,38 @@ function pseudoRandomVariation(index, seed) {
   return (frac - 0.5) * 0.18;
 }
 
+function saveDashboardState() {
+  const state = {
+    trend: Number(trendEl?.value || 0),
+    winterBoost: Number(winterBoostEl?.value || 0),
+    summerBoost: Number(summerBoostEl?.value || 0),
+    schoolBoost: Number(schoolBoostEl?.value || 0),
+    seasonality: Boolean(seasonalityEl?.checked),
+    variability: Boolean(variabilityEl?.checked),
+    selectedActions: actionCheckboxes.map(cb => ({
+      impact: Number(cb.dataset.impact || 0),
+      checked: cb.checked
+    }))
+  };
+
+  localStorage.setItem("ta08_dashboard_state", JSON.stringify(state));
+}
+
 function resetDashboard() {
-  trendEl.value = 5;
-  winterBoostEl.value = 12;
-  summerBoostEl.value = 8;
-  schoolBoostEl.value = 10;
-  seasonalityEl.checked = true;
-  variabilityEl.checked = true;
+  if (trendEl) trendEl.value = 5;
+  if (winterBoostEl) winterBoostEl.value = 12;
+  if (summerBoostEl) summerBoostEl.value = 8;
+  if (schoolBoostEl) schoolBoostEl.value = 10;
+  if (seasonalityEl) seasonalityEl.checked = true;
+  if (variabilityEl) variabilityEl.checked = true;
   actionCheckboxes.forEach(cb => cb.checked = false);
   recalculateAll();
+}
+
+function formatAxisValue(value) {
+  const n = Number(value);
+  if (Math.abs(n) >= 1000) return (n / 1000).toFixed(1) + "k";
+  return n.toString();
 }
 
 function round2(n) {

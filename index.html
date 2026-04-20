@@ -7,12 +7,12 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="no-scroll-page">
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
   <div class="bg-orb orb-3"></div>
 
-  <header class="topbar">
+  <header class="topbar compact-topbar">
     <div>
       <p class="eyebrow">Phase 3 · Sustainability Web</p>
       <h1>Sustainability Forecast Dashboard</h1>
@@ -22,9 +22,9 @@
     </div>
   </header>
 
-  <main class="dashboard-grid">
+  <main class="dashboard-grid compact-dashboard">
     <!-- LEFT -->
-    <aside class="panel left-panel">
+    <aside class="panel left-panel compact-panel">
       <div class="panel-head">
         <h2>Calculator Settings</h2>
         <span class="badge">Auto update</span>
@@ -51,7 +51,7 @@
         <input id="schoolBoost" type="number" step="1" min="-100" max="100" value="10" />
       </div>
 
-      <div class="switch-stack">
+      <div class="switch-stack compact-switch-stack">
         <label class="switch-card">
           <input type="checkbox" id="seasonality" checked />
           <span>Enable seasonality</span>
@@ -63,7 +63,7 @@
         </label>
       </div>
 
-      <div class="mini-stats vertical-stats">
+      <div class="mini-stats vertical-stats compact-stats">
         <article class="stat-card">
           <p class="stat-label">Indicators used</p>
           <h3>4</h3>
@@ -82,61 +82,61 @@
         </article>
       </div>
 
-      <button class="ghost-btn full-btn" id="resetBtn" type="button">Reset</button>
+      <button class="ghost-btn full-btn reset-purple" id="resetBtn" type="button">Reset</button>
     </aside>
 
     <!-- CENTER -->
     <section class="center-column">
-      <section class="charts-grid-3x3">
-        <div class="panel chart-card">
+      <section class="charts-grid-3x3 compact-grid">
+        <div class="panel chart-card compact-chart-card">
           <h3>1. Electricity consumption for next year</h3>
           <p class="chart-note" id="note-energy-year">Waiting for data...</p>
           <canvas id="chartEnergyYear"></canvas>
         </div>
 
-        <div class="panel chart-card">
+        <div class="panel chart-card compact-chart-card">
           <h3>2. Electricity consumption for the school period (Sep–Jun)</h3>
           <p class="chart-note" id="note-energy-school">Waiting for data...</p>
           <canvas id="chartEnergySchool"></canvas>
         </div>
 
-        <div class="panel chart-card">
+        <div class="panel chart-card compact-chart-card">
           <h3>3. Water consumption for next year</h3>
           <p class="chart-note" id="note-water-year">Waiting for data...</p>
           <canvas id="chartWaterYear"></canvas>
         </div>
 
-        <div class="panel chart-card">
+        <div class="panel chart-card compact-chart-card">
           <h3>4. Water consumption for the school period (Sep–Jun)</h3>
           <p class="chart-note" id="note-water-school">Waiting for data...</p>
           <canvas id="chartWaterSchool"></canvas>
         </div>
 
-        <div class="panel chart-card">
+        <div class="panel chart-card compact-chart-card">
           <h3>5. Office supplies consumption for next year</h3>
           <p class="chart-note" id="note-office-year">Waiting for data...</p>
           <canvas id="chartOfficeYear"></canvas>
         </div>
 
-        <div class="panel chart-card">
+        <div class="panel chart-card compact-chart-card">
           <h3>6. Office supplies consumption for the school period (Sep–Jun)</h3>
           <p class="chart-note" id="note-office-school">Waiting for data...</p>
           <canvas id="chartOfficeSchool"></canvas>
         </div>
 
-        <div class="panel chart-card">
+        <div class="panel chart-card compact-chart-card">
           <h3>7. Cleaning products consumption for next year</h3>
           <p class="chart-note" id="note-cleaning-year">Waiting for data...</p>
           <canvas id="chartCleaningYear"></canvas>
         </div>
 
-        <div class="panel chart-card">
+        <div class="panel chart-card compact-chart-card">
           <h3>8. Cleaning products consumption for the school period (Sep–Jun)</h3>
           <p class="chart-note" id="note-cleaning-school">Waiting for data...</p>
           <canvas id="chartCleaningSchool"></canvas>
         </div>
 
-        <section class="panel summary-panel">
+        <section class="panel summary-panel compact-summary-panel">
           <div class="panel-head compact-head">
             <h2>Global Summary</h2>
             <span class="badge teal">Live output</span>
@@ -169,10 +169,9 @@
     </section>
 
     <!-- RIGHT -->
-    <aside class="panel right-panel">
-      <div class="panel-head">
-        <h2>3-Year Action Plan</h2>
-        <span class="badge purple">Interactive</span>
+    <aside class="panel right-panel compact-panel">
+      <div class="right-top-button">
+        <a href="roadmap.html" class="purple-link-button">3-Year Action Plan</a>
       </div>
 
       <div class="roadmap-stack compact-roadmap">
@@ -271,10 +270,6 @@
       </div>
     </aside>
   </main>
-
-  <footer class="footer">
-    <p>Public web dashboard for sustainability analysis · Ready for GitHub Pages</p>
-  </footer>
 
   <script src="app.js"></script>
 </body>

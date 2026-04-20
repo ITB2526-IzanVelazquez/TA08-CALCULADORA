@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3-Year Action Plan</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Phase 3 · Sustainability Web</p>
+      <h1>3-Year Action Plan</h1>
+      <p class="subtitle">
+        Dynamic future projection based on the JSON data, dashboard settings and selected actions.
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <a href="index.html" class="purple-link-button back-btn">Back to Dashboard</a>
+    </div>
+  </header>
+
+  <main class="roadmap-page">
+    <section class="panel roadmap-hero">
+      <div class="panel-head">
+        <h2>Cronograma a 3 anys</h2>
+        <span class="badge purple">Dynamic diagram</span>
+      </div>
+      <p class="roadmap-intro" id="roadmapIntro">
+        Loading roadmap prediction...
+      </p>
+    </section>
+
+    <section class="roadmap-main-grid">
+      <section class="panel roadmap-big-chart">
+        <div class="panel-head compact-head">
+          <h2 id="selectedIndicatorTitle">Electricity · 3-year projection</h2>
+          <span class="badge teal">Live forecast</span>
+        </div>
+        <canvas id="mainRoadmapChart"></canvas>
+      </section>
+
+      <section class="panel roadmap-side-summary">
+        <div class="panel-head compact-head">
+          <h2>Roadmap Summary</h2>
+          <span class="badge">Live</span>
+        </div>
+
+        <div class="summary-grid compact-summary">
+          <article class="summary-card">
+            <p>Year 1 total</p>
+            <h3 id="year1Total">0</h3>
+          </article>
+          <article class="summary-card">
+            <p>Year 2 total</p>
+            <h3 id="year2Total">0</h3>
+          </article>
+          <article class="summary-card">
+            <p>Year 3 total</p>
+            <h3 id="year3Total">0</h3>
+          </article>
+          <article class="summary-card">
+            <p>Year 1 → Year 3</p>
+            <h3 id="year3Reduction">0%</h3>
+          </article>
+        </div>
+
+        <div class="insight-box" id="roadmapSummaryText">
+          Waiting for roadmap data...
+        </div>
+
+        <div class="indicator-buttons">
+          <button class="indicator-btn active" data-indicator="energy">Electricity</button>
+          <button class="indicator-btn" data-indicator="water">Water</button>
+          <button class="indicator-btn" data-indicator="office">Office supplies</button>
+          <button class="indicator-btn" data-indicator="cleaning">Cleaning products</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel roadmap-footer-panel">
+      <div class="panel-head compact-head">
+        <h2>Forecast logic</h2>
+        <span class="badge purple">3 lines</span>
+      </div>
+
+      <div class="timeline-steps">
+        <div class="timeline-step">
+          <div class="timeline-year">Year 1</div>
+          <div class="timeline-body">
+            <strong>Current forecast</strong>
+            <p>Built from the JSON data and the current calculator settings.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step">
+          <div class="timeline-year">Year 2</div>
+          <div class="timeline-body">
+            <strong>Mid-term prediction</strong>
+            <p>Forecasted from Year 1 applying the same settings and a stronger implementation of the selected actions.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step">
+          <div class="timeline-year">Year 3</div>
+          <div class="timeline-body">
+            <strong>Long-term prediction</strong>
+            <p>Forecasted from Year 2 with the actions fully consolidated to show the 3-year effect.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="roadmap.js"></script>
+</body>
+</html>
