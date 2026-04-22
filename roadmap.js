@@ -43,7 +43,7 @@ async function loadRoadmapData() {
     dashboardState = getSavedDashboardState();
 
     document.getElementById("roadmapIntro").textContent =
-      "This diagram predicts the next 3 years using the current JSON data, the dashboard settings and the selected sustainability actions.";
+      "This diagram predicts all months of the next 3 years using the JSON data, the dashboard settings and the selected actions.";
     renderSelectedIndicator(false);
   } catch (error) {
     console.error("Roadmap JSON error:", error);
@@ -138,6 +138,7 @@ function buildMonthlyData(data) {
 
 function initRoadmapChart() {
   const ctx = document.getElementById("mainRoadmapChart");
+  const currentYear = new Date().getFullYear();
 
   roadmapChart = new Chart(ctx, {
     type: "line",
@@ -145,31 +146,73 @@ function initRoadmapChart() {
       labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
       datasets: [
         {
-          label: "Year 1",
+          label: `${currentYear} · no actions`,
+          data: new Array(12).fill(0),
+          borderColor: "rgba(90,167,255,0.60)",
+          backgroundColor: "rgba(90,167,255,0.10)",
+          borderWidth: 2.5,
+          borderDash: [8, 6],
+          tension: 0.35,
+          fill: false,
+          pointRadius: 2.5,
+          pointHoverRadius: 5
+        },
+        {
+          label: `${currentYear} · with actions`,
           data: new Array(12).fill(0),
           borderColor: "#5aa7ff",
-          backgroundColor: "rgba(90,167,255,.15)",
+          backgroundColor: "rgba(90,167,255,0.18)",
           borderWidth: 3,
           tension: 0.35,
-          fill: false
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 5
         },
         {
-          label: "Year 2",
+          label: `${currentYear + 1} · no actions`,
+          data: new Array(12).fill(0),
+          borderColor: "rgba(83,229,255,0.60)",
+          backgroundColor: "rgba(83,229,255,0.10)",
+          borderWidth: 2.5,
+          borderDash: [8, 6],
+          tension: 0.35,
+          fill: false,
+          pointRadius: 2.5,
+          pointHoverRadius: 5
+        },
+        {
+          label: `${currentYear + 1} · with actions`,
           data: new Array(12).fill(0),
           borderColor: "#53e5ff",
-          backgroundColor: "rgba(83,229,255,.15)",
+          backgroundColor: "rgba(83,229,255,0.18)",
           borderWidth: 3,
           tension: 0.35,
-          fill: false
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 5
         },
         {
-          label: "Year 3",
+          label: `${currentYear + 2} · no actions`,
+          data: new Array(12).fill(0),
+          borderColor: "rgba(157,123,255,0.60)",
+          backgroundColor: "rgba(157,123,255,0.10)",
+          borderWidth: 2.5,
+          borderDash: [8, 6],
+          tension: 0.35,
+          fill: false,
+          pointRadius: 2.5,
+          pointHoverRadius: 5
+        },
+        {
+          label: `${currentYear + 2} · with actions`,
           data: new Array(12).fill(0),
           borderColor: "#9d7bff",
-          backgroundColor: "rgba(157,123,255,.15)",
+          backgroundColor: "rgba(157,123,255,0.18)",
           borderWidth: 3,
           tension: 0.35,
-          fill: false
+          fill: false,
+          pointRadius: 3,
+          pointHoverRadius: 5
         }
       ]
     },
@@ -185,7 +228,9 @@ function initRoadmapChart() {
           position: "top",
           labels: {
             color: "#dbe4ff",
-            font: { size: 12 }
+            font: { size: 11 },
+            boxWidth: 12,
+            padding: 10
           }
         }
       },
@@ -196,6 +241,7 @@ function initRoadmapChart() {
         },
         y: {
           beginAtZero: true,
+          grace: "10%",
           ticks: {
             color: "#dbe4ff",
             font: { size: 11 },
@@ -213,21 +259,32 @@ function renderSelectedIndicator(animate) {
 
   const projection = buildThreeYearProjectionForIndicator(currentIndicator, dashboardState);
   const indicatorMeta = ROADMAP_INDICATORS[currentIndicator];
+  const currentYear = new Date().getFullYear();
 
   document.getElementById("selectedIndicatorTitle").textContent =
     `${indicatorMeta.label} · 3-year projection`;
 
-  roadmapChart.data.datasets[0].data = projection.year1;
-  roadmapChart.data.datasets[1].data = projection.year2;
-  roadmapChart.data.datasets[2].data = projection.year3;
+  roadmapChart.data.datasets[0].label = `${currentYear} · no actions`;
+  roadmapChart.data.datasets[1].label = `${currentYear} · with actions`;
+  roadmapChart.data.datasets[2].label = `${currentYear + 1} · no actions`;
+  roadmapChart.data.datasets[3].label = `${currentYear + 1} · with actions`;
+  roadmapChart.data.datasets[4].label = `${currentYear + 2} · no actions`;
+  roadmapChart.data.datasets[5].label = `${currentYear + 2} · with actions`;
+
+  roadmapChart.data.datasets[0].data = projection.year1Base;
+  roadmapChart.data.datasets[1].data = projection.year1Reduced;
+  roadmapChart.data.datasets[2].data = projection.year2Base;
+  roadmapChart.data.datasets[3].data = projection.year2Reduced;
+  roadmapChart.data.datasets[4].data = projection.year3Base;
+  roadmapChart.data.datasets[5].data = projection.year3Reduced;
 
   roadmapChart.options.animation.duration = animate ? 1000 : 0;
   roadmapChart.update();
 
-  const total1 = sum(projection.year1);
-  const total2 = sum(projection.year2);
-  const total3 = sum(projection.year3);
-  const reduction = total1 > 0 ? round2(((total1 - total3) / total1) * 100) : 0;
+  const total1 = sum(projection.year1Reduced);
+  const total2 = sum(projection.year2Reduced);
+  const total3 = sum(projection.year3Reduced);
+  const reduction = total1 > 0 ? round2(((sum(projection.year1Base) - total3) / sum(projection.year1Base)) * 100) : 0;
 
   document.getElementById("year1Total").textContent = `${formatNumber(total1)} ${indicatorMeta.unit}`;
   document.getElementById("year2Total").textContent = `${formatNumber(total2)} ${indicatorMeta.unit}`;
@@ -235,11 +292,13 @@ function renderSelectedIndicator(animate) {
   document.getElementById("year3Reduction").textContent = `${reduction}%`;
 
   document.getElementById("roadmapSummaryText").textContent =
-    `${indicatorMeta.label} is projected over 3 years. Year 1 uses the current dashboard settings, Year 2 is a prediction based on the same behaviour and partial implementation of selected actions, and Year 3 shows the longer-term prediction with the action package fully consolidated.`;
+    `${indicatorMeta.label} is displayed with 2 versions for each year: dashed lines show the prediction before reductions, and continuous lines show the same prediction after applying the selected actions from the main dashboard.`;
 }
 
 function buildThreeYearProjectionForIndicator(indicatorKey, state) {
-  const base = monthlyData[indicatorKey].monthly.slice();
+  const rawSeries = monthlyData[indicatorKey].monthly.slice();
+  const completedBaseSeries = buildCompletedBaseYear(rawSeries, indicatorKey);
+
   const trendPct = clampPercent(state.trend) / 100;
   const winterPct = clampPercent(state.winterBoost) / 100;
   const summerPct = clampPercent(state.summerBoost) / 100;
@@ -254,25 +313,203 @@ function buildThreeYearProjectionForIndicator(indicatorKey, state) {
     30
   );
 
-  const year1 = buildProjectedYear(base, 1, trendPct, winterPct, summerPct, schoolPct, seasonality, variability, indicatorKey, selectedReductionTotal * 0.4);
-  const year2 = buildProjectedYear(year1, 2, trendPct, winterPct, summerPct, schoolPct, seasonality, variability, indicatorKey, selectedReductionTotal * 0.7);
-  const year3 = buildProjectedYear(year2, 3, trendPct, winterPct, summerPct, schoolPct, seasonality, variability, indicatorKey, selectedReductionTotal * 1.0);
+  const year1Base = buildPredictedYear(
+    completedBaseSeries,
+    indicatorKey,
+    1,
+    trendPct,
+    winterPct,
+    summerPct,
+    schoolPct,
+    seasonality,
+    variability,
+    0
+  );
 
-  return { year1, year2, year3 };
+  const year1Reduced = buildPredictedYear(
+    completedBaseSeries,
+    indicatorKey,
+    1,
+    trendPct,
+    winterPct,
+    summerPct,
+    schoolPct,
+    seasonality,
+    variability,
+    selectedReductionTotal * 0.40
+  );
+
+  const year2Base = buildPredictedYear(
+    year1Base,
+    indicatorKey,
+    2,
+    trendPct,
+    winterPct,
+    summerPct,
+    schoolPct,
+    seasonality,
+    variability,
+    0
+  );
+
+  const year2Reduced = buildPredictedYear(
+    year1Reduced,
+    indicatorKey,
+    2,
+    trendPct,
+    winterPct,
+    summerPct,
+    schoolPct,
+    seasonality,
+    variability,
+    selectedReductionTotal * 0.70
+  );
+
+  const year3Base = buildPredictedYear(
+    year2Base,
+    indicatorKey,
+    3,
+    trendPct,
+    winterPct,
+    summerPct,
+    schoolPct,
+    seasonality,
+    variability,
+    0
+  );
+
+  const year3Reduced = buildPredictedYear(
+    year2Reduced,
+    indicatorKey,
+    3,
+    trendPct,
+    winterPct,
+    summerPct,
+    schoolPct,
+    seasonality,
+    variability,
+    selectedReductionTotal * 1.00
+  );
+
+  return { year1Base, year1Reduced, year2Base, year2Reduced, year3Base, year3Reduced };
 }
 
-function buildProjectedYear(inputSeries, yearNumber, trendPct, winterPct, summerPct, schoolPct, seasonality, variability, indicatorKey, reductionPct) {
-  const seed = indicatorKey.charCodeAt(0) + yearNumber * 13;
+function buildCompletedBaseYear(rawSeries, indicatorKey) {
+  const filled = new Array(12).fill(0);
+  const existing = rawSeries
+    .map((value, index) => ({ value: Number(value) || 0, index }))
+    .filter(item => item.value > 0);
 
-  return inputSeries.map((baseValue, monthIndex) => {
+  if (existing.length === 0) {
+    return buildFallbackSeries(indicatorKey);
+  }
+
+  const averageExisting = existing.reduce((sum, item) => sum + item.value, 0) / existing.length;
+
+  for (let i = 0; i < 12; i++) {
+    if ((Number(rawSeries[i]) || 0) > 0) {
+      filled[i] = Number(rawSeries[i]);
+      continue;
+    }
+
+    const seasonalFactor = getDefaultSeasonFactor(indicatorKey, i);
+    const neighbourEstimate = estimateFromNeighbours(rawSeries, i);
+
+    if (neighbourEstimate > 0) {
+      filled[i] = neighbourEstimate;
+    } else {
+      filled[i] = averageExisting * seasonalFactor;
+    }
+  }
+
+  return smoothSeries(filled);
+}
+
+function buildFallbackSeries(indicatorKey) {
+  const base = [];
+  for (let i = 0; i < 12; i++) {
+    base.push(round2(100 * getDefaultSeasonFactor(indicatorKey, i)));
+  }
+  return smoothSeries(base);
+}
+
+function estimateFromNeighbours(series, index) {
+  const previous = findNearestValue(series, index, -1);
+  const next = findNearestValue(series, index, 1);
+
+  if (previous > 0 && next > 0) return (previous + next) / 2;
+  if (previous > 0) return previous;
+  if (next > 0) return next;
+  return 0;
+}
+
+function findNearestValue(series, startIndex, direction) {
+  let i = startIndex + direction;
+  while (i >= 0 && i < 12) {
+    const value = Number(series[i]) || 0;
+    if (value > 0) return value;
+    i += direction;
+  }
+  return 0;
+}
+
+function getDefaultSeasonFactor(indicatorKey, monthIndex) {
+  let factor = 1;
+
+  if ([8, 9, 10, 11, 0, 1, 2, 3, 4, 5].includes(monthIndex)) factor *= 1.08;
+  if ([6, 7].includes(monthIndex)) factor *= 0.80;
+
+  if (monthIndex === 7) factor *= 0.12; // August
+  if (monthIndex === 11) factor *= 0.50; // December
+  if (monthIndex === 3) factor *= 0.60; // April / Easter
+
+  if (indicatorKey === "energy") {
+    if ([11, 0, 1].includes(monthIndex)) factor *= 1.15;
+    if ([5, 6].includes(monthIndex)) factor *= 0.92;
+  }
+
+  if (indicatorKey === "water") {
+    if ([5, 6].includes(monthIndex)) factor *= 1.10;
+  }
+
+  if (indicatorKey === "office") {
+    if ([8, 9, 10, 1, 2, 3, 4].includes(monthIndex)) factor *= 1.10;
+    if ([6, 7].includes(monthIndex)) factor *= 0.55;
+  }
+
+  if (indicatorKey === "cleaning") {
+    if ([8, 9, 10, 1, 2, 3, 4].includes(monthIndex)) factor *= 1.08;
+    if ([6, 7].includes(monthIndex)) factor *= 0.65;
+  }
+
+  return factor;
+}
+
+function smoothSeries(series) {
+  const smoothed = [];
+
+  for (let i = 0; i < series.length; i++) {
+    const prev = series[(i - 1 + series.length) % series.length];
+    const curr = series[i];
+    const next = series[(i + 1) % series.length];
+
+    const value = (prev * 0.2) + (curr * 0.6) + (next * 0.2);
+    smoothed.push(round2(value));
+  }
+
+  return smoothed;
+}
+
+function buildPredictedYear(inputSeries, indicatorKey, yearNumber, trendPct, winterPct, summerPct, schoolPct, seasonality, variability, reductionPct) {
+  const seed = indicatorKey.charCodeAt(0) + yearNumber * 17;
+
+  const projected = inputSeries.map((baseValue, monthIndex) => {
     let value = Number(baseValue) || 0;
 
     value *= (1 + trendPct);
 
     if (seasonality) {
-      if ([11,0,1].includes(monthIndex)) value *= (1 + winterPct);
-      if ([5,6,7].includes(monthIndex)) value *= (1 + summerPct);
-      if ([8,9,10,11,0,1,2,3,4,5].includes(monthIndex)) value *= (1 + schoolPct);
+      value *= getInstitutionSeasonalityFactor(indicatorKey, monthIndex, winterPct, summerPct, schoolPct);
     }
 
     if (variability) {
@@ -284,12 +521,52 @@ function buildProjectedYear(inputSeries, yearNumber, trendPct, winterPct, summer
 
     return round2(value);
   });
+
+  return smoothSeries(projected);
+}
+
+function getInstitutionSeasonalityFactor(indicatorKey, monthIndex, winterPct, summerPct, schoolPct) {
+  let factor = 1;
+
+  if ([11, 0, 1].includes(monthIndex)) factor *= (1 + winterPct);
+  if ([5, 6, 7].includes(monthIndex)) factor *= (1 + summerPct);
+  if ([8, 9, 10, 11, 0, 1, 2, 3, 4, 5].includes(monthIndex)) factor *= (1 + schoolPct);
+
+  if (monthIndex === 7) factor *= 0.10; // August
+  if (monthIndex === 11) factor *= 0.45; // December
+  if (monthIndex === 3) factor *= 0.55; // April / Easter
+
+  if (indicatorKey === "office") {
+    if (monthIndex === 7) factor *= 0.05;
+    if (monthIndex === 11) factor *= 0.60;
+    if (monthIndex === 3) factor *= 0.65;
+  }
+
+  if (indicatorKey === "cleaning") {
+    if (monthIndex === 7) factor *= 0.20;
+    if (monthIndex === 11) factor *= 0.70;
+    if (monthIndex === 3) factor *= 0.70;
+  }
+
+  if (indicatorKey === "water") {
+    if (monthIndex === 7) factor *= 0.25;
+    if (monthIndex === 11) factor *= 0.70;
+    if (monthIndex === 3) factor *= 0.70;
+  }
+
+  if (indicatorKey === "energy") {
+    if (monthIndex === 7) factor *= 0.20;
+    if (monthIndex === 11) factor *= 0.65;
+    if (monthIndex === 3) factor *= 0.70;
+  }
+
+  return factor;
 }
 
 function pseudoRandomVariation(index, seed) {
   const raw = Math.sin((index + 1) * 12.9898 + seed * 78.233) * 43758.5453;
   const frac = raw - Math.floor(raw);
-  return (frac - 0.5) * 0.12;
+  return (frac - 0.5) * 0.10;
 }
 
 function clampPercent(n) {
