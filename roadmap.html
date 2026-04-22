@@ -7,12 +7,12 @@
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
+<body class="roadmap-no-scroll">
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
   <div class="bg-orb orb-3"></div>
 
-  <header class="topbar">
+  <header class="topbar roadmap-topbar">
     <div>
       <p class="eyebrow">Phase 3 · Sustainability Web</p>
       <h1>3-Year Action Plan</h1>
@@ -26,30 +26,27 @@
     </div>
   </header>
 
-  <main class="roadmap-page">
-    <section class="panel roadmap-hero">
+  <main class="roadmap-page compact-roadmap-page">
+    <section class="panel roadmap-hero compact-roadmap-hero">
       <div class="panel-head">
         <h2>Cronograma a 3 anys</h2>
-        <span class="badge purple">Dynamic diagram</span>
       </div>
       <p class="roadmap-intro" id="roadmapIntro">
         Loading roadmap prediction...
       </p>
     </section>
 
-    <section class="roadmap-main-grid">
-      <section class="panel roadmap-big-chart">
+    <section class="roadmap-main-grid compact-roadmap-main-grid">
+      <section class="panel roadmap-big-chart compact-roadmap-chart-panel">
         <div class="panel-head compact-head">
           <h2 id="selectedIndicatorTitle">Electricity · 3-year projection</h2>
-          <span class="badge teal">Live forecast</span>
         </div>
         <canvas id="mainRoadmapChart"></canvas>
       </section>
 
-      <section class="panel roadmap-side-summary">
+      <section class="panel roadmap-side-summary compact-roadmap-side">
         <div class="panel-head compact-head">
           <h2>Roadmap Summary</h2>
-          <span class="badge">Live</span>
         </div>
 
         <div class="summary-grid compact-summary">
@@ -84,13 +81,12 @@
       </section>
     </section>
 
-    <section class="panel roadmap-footer-panel">
+    <section class="panel roadmap-footer-panel compact-roadmap-footer">
       <div class="panel-head compact-head">
         <h2>Forecast logic</h2>
-        <span class="badge purple">3 lines</span>
       </div>
 
-      <div class="timeline-steps">
+      <div class="timeline-steps compact-timeline">
         <div class="timeline-step">
           <div class="timeline-year">Year 1</div>
           <div class="timeline-body">
@@ -103,7 +99,7 @@
           <div class="timeline-year">Year 2</div>
           <div class="timeline-body">
             <strong>Mid-term prediction</strong>
-            <p>Forecasted from Year 1 applying the same settings and a stronger implementation of the selected actions.</p>
+            <p>Forecasted from Year 1 applying the same settings and a stronger implementation of selected actions.</p>
           </div>
         </div>
 
@@ -111,7 +107,7 @@
           <div class="timeline-year">Year 3</div>
           <div class="timeline-body">
             <strong>Long-term prediction</strong>
-            <p>Forecasted from Year 2 with the actions fully consolidated to show the 3-year effect.</p>
+            <p>Forecasted from Year 2 with the actions fully consolidated.</p>
           </div>
         </div>
       </div>
