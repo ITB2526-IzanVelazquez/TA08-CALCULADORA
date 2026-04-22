@@ -184,10 +184,10 @@ function initCharts() {
         animation: false,
         layout: {
           padding: {
-            top: 4,
-            right: 8,
-            bottom: 0,
-            left: 4
+            top: 6,
+            right: 10,
+            bottom: 2,
+            left: 8
           }
         },
         plugins: {
@@ -198,7 +198,7 @@ function initCharts() {
               boxWidth: 12,
               boxHeight: 8,
               padding: 8,
-              font: { size: 11 }
+              font: { size: 10 }
             }
           },
           tooltip: {
@@ -215,7 +215,7 @@ function initCharts() {
               maxRotation: 0,
               minRotation: 0,
               autoSkip: true,
-              font: { size: 10 }
+              font: { size: 9 }
             },
             grid: { color: "rgba(255,255,255,.05)" }
           },
@@ -224,7 +224,7 @@ function initCharts() {
             grace: "10%",
             ticks: {
               color: "#dbe4ff",
-              font: { size: 10 },
+              font: { size: 9 },
               callback: (value) => formatAxisValue(value)
             },
             grid: { color: "rgba(255,255,255,.05)" }
@@ -299,9 +299,7 @@ function calculateSeries(indicatorKey, activeMonths) {
     value *= (1 + trendPct * (position / Math.max(1, activeMonths.length - 1)));
 
     if (seasonalityEl?.checked) {
-      if ([11, 0, 1].includes(monthIndex)) value *= (1 + winterPct);
-      if ([5, 6, 7].includes(monthIndex)) value *= (1 + summerPct);
-      if (SCHOOL_MONTHS.includes(monthIndex)) value *= (1 + schoolPct);
+      value *= getInstitutionSeasonalityFactor(indicatorKey, monthIndex, winterPct, summerPct, schoolPct);
     }
 
     if (variabilityEl?.checked) {
@@ -317,6 +315,46 @@ function calculateSeries(indicatorKey, activeMonths) {
     total: round2(series.reduce((a, b) => a + b, 0)),
     unit
   };
+}
+
+function getInstitutionSeasonalityFactor(indicatorKey, monthIndex, winterPct, summerPct, schoolPct) {
+  let factor = 1;
+
+  if ([11, 0, 1].includes(monthIndex)) factor *= (1 + winterPct);
+  if ([5, 6, 7].includes(monthIndex)) factor *= (1 + summerPct);
+  if (SCHOOL_MONTHS.includes(monthIndex)) factor *= (1 + schoolPct);
+
+  // Institute closures / low activity
+  if (monthIndex === 7) factor *= 0.10; // August very low
+  if (monthIndex === 11) factor *= 0.45; // December low
+  if (monthIndex === 3) factor *= 0.55; // April / Easter low
+
+  // Extra indicator-specific realism
+  if (indicatorKey === "office") {
+    if (monthIndex === 7) factor *= 0.05;
+    if (monthIndex === 11) factor *= 0.60;
+    if (monthIndex === 3) factor *= 0.65;
+  }
+
+  if (indicatorKey === "cleaning") {
+    if (monthIndex === 7) factor *= 0.20;
+    if (monthIndex === 11) factor *= 0.70;
+    if (monthIndex === 3) factor *= 0.70;
+  }
+
+  if (indicatorKey === "water") {
+    if (monthIndex === 7) factor *= 0.25;
+    if (monthIndex === 11) factor *= 0.70;
+    if (monthIndex === 3) factor *= 0.70;
+  }
+
+  if (indicatorKey === "energy") {
+    if (monthIndex === 7) factor *= 0.20;
+    if (monthIndex === 11) factor *= 0.65;
+    if (monthIndex === 3) factor *= 0.70;
+  }
+
+  return factor;
 }
 
 function getSelectedReductionFactor() {
